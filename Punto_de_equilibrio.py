@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+import matplotlib.pyplot as plt 
 
 # Funciones para cambiar entre pantallas
 def pantalla_inicio():
@@ -34,10 +35,13 @@ def calcular():
         costounitario = float(entrada_costounitario.get())
         gastofijo = float(entrada_gastofijo.get())
 
+        # Calcular el punto de equilibrio
         resultado_unidades = puntoequilibrio(precioventa, costounitario, gastofijo)
 
         # Limpiar la tabla antes de agregar nuevos resultados
-        limpiar()
+        for i in tabla_resultados.get_children():
+            tabla_resultados.delete(i)
+            
         margen = resultado_unidades * 0.25
 
         # Generar el rango de unidades con un margen de 25% hacia ambos lados
@@ -63,7 +67,42 @@ def calcular():
     except ValueError:
         messagebox.showerror("", "El valor introducido no es válido. Introduce por favor un número.")
         return
-
+    
+def mostrar_grafica():
+    try:
+        precioventa = float(entrada_preciov.get())
+        costounitario = float(entrada_costounitario.get())
+        gastofijo = float(entrada_gastofijo.get())
+        
+        #Calcular el punto de equilibrio
+        resultado_unidades = puntoequilibrio(precioventa, costounitario, gastofijo)
+        unidades = [i for i in range(int(resultado_unidades * 2))]  # Rango de unidades
+        
+        # Cálculos para la gráfica
+        ventas_totales = [u * precioventa for u in unidades]
+        costos_variables = [u * costounitario for u in unidades]
+        costos_fijos = [gastofijo for _ in unidades]  # Los costos fijos son constantes
+        costos_totales = [costos_variables[i] + gastofijo for i in range(len(unidades))]
+        
+        # Graficar y genera las lineas segun el color
+        plt.figure(figsize=(10, 6))
+        plt.plot(unidades, ventas_totales, label="Ventas Totales", color='green')
+        plt.plot(unidades, costos_totales, label="Costos Totales", color='red')
+        plt.plot(unidades, costos_variables, label="Costos Variables", color='orange')
+        plt.plot(unidades, costos_fijos, label="Costos Fijos", color='purple')
+        plt.axvline(x=resultado_unidades, color='blue', linestyle='--', label=f"Punto de Equilibrio: {resultado_unidades:.2f} unidades")
+        
+        # Configuracion de la grafica
+        plt.title('Gráfica del Punto de Equilibrio')
+        plt.xlabel('Unidades')
+        plt.ylabel('Quetzales (Q)')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+        
+    except ValueError:
+        messagebox.showerror("", "El valor introducido no es válido. Introduce por favor un número.")
+        
 # Ventana principal
 ventana = tk.Tk()
 ventana.title("Punto de Equilibrio")
@@ -108,6 +147,10 @@ boton_calcular.grid(row=4, column=1, padx=10, pady=10, sticky="e")
 
 boton_limpiar = tk.Button(frame_entradas, text="Limpiar", command=limpiar, font=("Times New Roman", 10))
 boton_limpiar.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+
+# Boton para mostrar grafica
+boton_grafica = tk.Button(frame_entradas, text="Mostrar Gráfica", command=mostrar_grafica, font=("Times New Roman", 10))
+boton_grafica.grid(row=5, column=1, padx=10, pady=10, sticky="e")
 
 # Tabla para el punto de equilibrio
 columnas = ["Categoría", "Valor 1", "Valor 2", "Punto Equilibrio", "Valor 4", "Valor 5"]
