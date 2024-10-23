@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-import matplotlib as mt
+import matplotlib.pyplot as plt
 from tkinter import ttk
 ventana = tk.Tk()
 ventana.title("Punto de Equilibrio")
@@ -28,11 +28,38 @@ def calcular():
     
         resultado = puntoequi(precioventa, costounitario, gastofijo)
         resultado_unidades.config(text= f"Para Alcanzar el punto de equilibrio deberia vender {resultado} unidades")
-    
+        
+        boton_grafica.grid(row=6, column=1, padx=10, pady=10)
+            
     except ValueError:
         messagebox.showerror("", "El valor introducido no es valido, Introduce Por favor un Numero")
         return
-    
+
+def mostrar_grafica():
+    try:
+        precioventa = float(entrada_preciov.get())
+        costounitario = float(entrada_costounitario.get())
+        gastofijo = float(entrada_gastofijo.get())
+        
+        unidades = list(range(0, 101))
+        costos_totales = [costounitario * u + gastofijo for u in unidades]
+        ingresos_totales = [precioventa * u for u in unidades]
+        
+        plt.figure(figsize=(8, 6))
+        plt.plot(unidades, costos_totales, label='Costos Totales', color='red')
+        plt.plot(unidades, ingresos_totales, label='Ingresos Totales', color='green')
+        plt.axvline(puntoequi(precioventa, costounitario, gastofijo), color='blue', linestyle='--', label='Punto de Equilibrio')
+        plt.title('Gráfico del Punto de Equilibrio')
+        plt.xlabel('Unidades Vendidas')
+        plt.ylabel('Quetzales')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+        
+    except ValueError:
+        messagebox.showerror("", "El valor introducido no es valido. Por favor introduce un numero")
+        return
+
 bienvenida = tk.Label(pantalla_principal, text="Bienvenido ingrese los datos solicitados")
 bienvenida.grid(row=0,column=3,padx=5,pady=5)
 preciovl = tk.Label(ventana, text="Precio de Venta: ", font=("Times New Roman", 10))
@@ -58,5 +85,8 @@ boton_calcular.grid(row=4, column=1, padx=10, pady=10)
 
 resultado_unidades= tk.Label(ventana, text="", font=("Times New Roman", 10))
 resultado_unidades.grid(row=5, column=1, padx=10, pady=10)
+
+boton_grafica = tk.Button(ventana, text="Mostrar Graficar", command=mostrar_grafica, font=("Times New Roman", 10))
+boton_grafica.grid_forget()
 
 ventana.mainloop()
