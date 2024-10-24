@@ -1,10 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+import os
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.ticker import FuncFormatter
-
+carpeta_recursos = os.path.join(os.path.dirname(__file__), 'audiovisual')
 def pantalla_inicio():
     limpiar()
     frame_entradas.grid()
@@ -126,7 +127,7 @@ ventana = tk.Tk()
 ventana.title("Punto de Equilibrio")
 ventana.geometry("1000x500")
 ventana.state('zoomed')
-ventana.iconbitmap('logo.ico')
+ventana.iconbitmap(os.path.join(carpeta_recursos, 'logo.ico'))
 # Crear un frame para las entradas y etiquetas
 frame_entradas = tk.Frame(ventana)
 frame_entradas.grid(row=0, column=0, sticky="nsew")
