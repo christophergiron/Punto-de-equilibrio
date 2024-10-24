@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import matplotlib.pyplot as plt 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Funciones para cambiar entre pantallas
 def pantalla_inicio():
@@ -17,14 +18,16 @@ def pantalla_integrantes():
     boton_integrantes.place_forget()
 
 # Función para limpiar las entradas y la tabla
-def limpiar():
-    entrada_preciov.delete(0, tk.END)
-    entrada_costounitario.delete(0, tk.END)
-    entrada_gastofijo.delete(0, tk.END)
+def limpiar():   
     for i in tabla_resultados.get_children():
         tabla_resultados.delete(i)
+    
     resultado.config(text="")
-
+    
+    if hasattr(limpiar, 'canvas') and limpiar.canvas:
+        limpiar.canvas.get_tk_widget().grid_forget()
+        limpiar.canvas = None
+    
 # Función para calcular el punto de equilibrio
 def puntoequilibrio(precioventa, costounitario, gastofijo):
     return gastofijo / (precioventa - costounitario)
@@ -37,14 +40,11 @@ def calcular():
 
         # Calcular el punto de equilibrio
         resultado_unidades = puntoequilibrio(precioventa, costounitario, gastofijo)
-
-        # Limpiar la tabla antes de agregar nuevos resultados
-        for i in tabla_resultados.get_children():
-            tabla_resultados.delete(i)
             
-        margen = resultado_unidades * 0.25
+        limpiar()
 
         # Generar el rango de unidades con un margen de 25% hacia ambos lados
+        margen = resultado_unidades * 0.25
         unidades = [resultado_unidades - margen * 2, resultado_unidades - margen, resultado_unidades, resultado_unidades + margen, resultado_unidades + margen * 2]
         ventas = [u * precioventa for u in unidades]
         costo_variable = [u * costounitario for u in unidades]
@@ -58,6 +58,8 @@ def calcular():
         tabla_resultados.insert("", "end", values=("Margen de Contribución", *margen_contribucion))
         tabla_resultados.insert("", "end", values=("Costo Fijo", *[gastofijo]*5))
         tabla_resultados.insert("", "end", values=("Utilidad", *utilidad))
+        
+        # Asegurese de que la tabla este visible
         tabla_resultados.grid(row=0, column=0, columnspan=2, padx=10, pady=20)
 
         # Mostrar el resultado
@@ -84,21 +86,27 @@ def mostrar_grafica():
         costos_fijos = [gastofijo for _ in unidades]  # Los costos fijos son constantes
         costos_totales = [costos_variables[i] + gastofijo for i in range(len(unidades))]
         
+        # Se crea la figura
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
         # Graficar y genera las lineas segun el color
-        plt.figure(figsize=(10, 6))
-        plt.plot(unidades, ventas_totales, label="Ventas Totales", color='green')
-        plt.plot(unidades, costos_totales, label="Costos Totales", color='red')
-        plt.plot(unidades, costos_variables, label="Costos Variables", color='orange')
-        plt.plot(unidades, costos_fijos, label="Costos Fijos", color='purple')
-        plt.axvline(x=resultado_unidades, color='blue', linestyle='--', label=f"Punto de Equilibrio: {resultado_unidades:.2f} unidades")
+        ax.plot(unidades, ventas_totales, label="Ventas Totales", color='green')
+        ax.plot(unidades, costos_totales, label="Costos Totales", color='red')
+        ax.plot(unidades, costos_variables, label="Costos Variables", color='orange')
+        ax.plot(unidades, costos_fijos, label="Costos Fijos", color='purple')
+        ax.axvline(x=resultado_unidades, color='blue', linestyle='--', label=f"Punto de Equilibrio: {resultado_unidades:.2f} unidades")
         
         # Configuracion de la grafica
-        plt.title('Gráfica del Punto de Equilibrio')
-        plt.xlabel('Unidades')
-        plt.ylabel('Quetzales (Q)')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+        ax.set_title('Gráfica del Punto de Equilibrio')
+        ax.set_xlabel('Unidades')
+        ax.set_ylabel('Quetzales (Q)')
+        ax.legend()
+        ax.grid(True)
+        
+        # Mostrar la grafica en el canvas
+        canvas = FigureCanvasTkAgg(fig, master=frame_tabla)  # Crear canvas para la gráfica
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=0, column=4, padx=10, pady=20, sticky="se")
         
     except ValueError:
         messagebox.showerror("", "El valor introducido no es válido. Introduce por favor un número.")
